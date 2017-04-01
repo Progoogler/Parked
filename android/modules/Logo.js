@@ -3,20 +3,25 @@ import {
   StyleSheet,
   Text,
   View,
-  Image
+  Image,
+  Animated
 } from 'react-native';
 
 export default class Logo extends Component {
   constructor(props) {
     super(props);
-    this.state = { displayed: false };
+    this.state = {
+      displayed: false,
+      marginLeftOfCar: new Animated.Value(0)
+    };
   }
 
   render() {
+    console.log(this.state.marginLeftOfCar)
     setTimeout(() => {
       if (!this.state.displayed) {
         this.setState({ displayed: true });
-        this.props.navigator.push({ page: 'Main' });
+        this.props.navigator.immediatelyResetRouteStack([{ page: 'Main' }]);
       } else {
         return;
       }
@@ -25,11 +30,26 @@ export default class Logo extends Component {
     return (
       <View style={styles.container}>
         <Text style={styles.title}> Parked </Text>
-        <Text style={styles.image}> Poop </Text>
-        <Text></Text>
+        <View style={{alignItems: 'center', marginBottom: 80}}>
+          <Image source={require('../../resources/images/pin.png')} />
+          <Animated.Image source={require('../../resources/images/car.png')} style={{marginRight: this.state.marginLeftOfCar}} />
+        </View>
+        <Text> { /* filler for the end of column style */ } </Text>
       </View>
     );
-  }  
+  }
+
+  componentDidMount() {
+    setTimeout(function() {
+      this.state.marginLeftOfCar.setValue(30);
+      Animated.spring(
+        {
+          toValue: -1200,
+          friction: 1                
+        }
+      ).start()
+    }.bind(this), 1300);
+  }
 }
 
 const styles = StyleSheet.create({
@@ -41,9 +61,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FCFF',
   },
   title: {
-
-  },
-  image: {
-
+    fontSize: 66,
+    fontWeight: 'bold',
+    color: '#48BBEC',
+    marginTop: 48,
+    textShadowColor: 'blue',
+    textShadowOffset: {width: 2, height: 2}
   }
 });
