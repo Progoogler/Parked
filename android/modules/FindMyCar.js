@@ -5,7 +5,6 @@ import {
   View,
   BackAndroid,
   TouchableHighlight,
-  ScrollView,
   AsyncStorage
 } from 'react-native';
 import MapView from 'react-native-maps';
@@ -109,10 +108,12 @@ export default class FindMyCar extends Component {
   }
 
   componentDidMount() {
-    this.mapRef.fitToSuppliedMarkers(
-      [ 'carMarker', 'personMarker' ],
-        false
-      );
+    setTimeout(() => {
+      this.mapRef.fitToSuppliedMarkers(
+        [ 'carMarker', 'personMarker' ],
+          false
+        );
+      }, 500);
     BackAndroid.addEventListener('hardwareBackPress', () => {
       if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
           this.props.navigator.pop();
@@ -134,9 +135,15 @@ export default class FindMyCar extends Component {
 
   getDirections() {
     let directions = [];
+    let latitude;
+    let longitude;
+    if (!this.props.longitude) {
+      latitude = parseFloat(AsyncStorage.getItem('@Parked:latitude'));
+      longitude = parseFloat(AsyncStorage.getItem('@Parked:longitude'));
+    }
     fetch('https://maps.googleapis.com/maps/api/directions/json?origin=' +
      this.state.latitude + ',' + this.state.longitude + '&destination=' +
-      this.props.latitude + ',' + this.props.latitude + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68')
+      (this.props.latitude || latitude) + ',' + (this.props.longitude || longitude) + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68')
     .then((response) => {
       let res = JSON.parse(response._bodyInit);
       let steps = res.routes[0].legs[0].steps;
