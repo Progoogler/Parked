@@ -90,8 +90,8 @@ export default class ParkedMyCar extends Component {
             <MapView.Marker draggable
               coordinate={
                 {
-                  latitude: latitude,
-                  longitude: longitude
+                  latitude: this.state.latitude,
+                  longitude: this.state.longitude
                 }
               }
               onDragEnd={(e) => {
