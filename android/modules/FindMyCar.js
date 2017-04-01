@@ -13,13 +13,85 @@ import MapView from 'react-native-maps';
 export default class FindMyCar extends Component {
   constructor(props) {
     super(props);
+    this.mapRef = null;
     this.state = {
-      latitude: '',
-      longitude: '',
-      directions: [],
-      directionList: []
-    }
+      latitude: 0,
+      longitude: 0
+    };
+    this.directions = [];
+    this.directionList = [];
+    this.directionContainerHeight = 80;
+    this.initialHeight = 80;
   }
+
+  render() {
+
+    return (
+      <View style={styles.container}>
+        <View
+        style={styles.directionsContainer}
+        onTouchMove={ this.handleContainerResize.bind(this) }>
+
+          { this.directions }
+
+        </View>
+        <MapView
+          ref={(ref) => { this.mapRef = ref }}
+          style={styles.map}
+          mapType="hybrid"
+          initialRegion={{
+            latitude: this.props.latitude ? this.props.latitude : 37.78825,
+            longitude: this.props.longitude ? this.props.longitude : -122.4324,
+            latitudeDelta: 0.0048,
+            longitudeDelta: 0.0020
+          }}>
+
+          <MapView.Marker
+            coordinate={
+              {
+                latitude: this.props.latitude,
+                longitude: this.props.longitude
+              }
+            }
+            key={'carMarker'}
+            title={ 'You are parked here' }>
+
+            <MapView.Callout tooltip={true}>
+              <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are parked here</Text></View>
+            </MapView.Callout>
+
+          </MapView.Marker>
+
+          <MapView.Marker
+            coordinate={
+              {
+                latitude: this.state.latitude,
+                longitude: this.state.longitude
+              }
+            }
+            key={'personMarker'}
+            pinColor='green'>
+
+            <MapView.Callout tooltip={true}>
+              <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are here</Text></View>
+            </MapView.Callout>
+
+          </MapView.Marker>
+
+
+        </MapView>
+        <TouchableHighlight
+        style={styles.button}
+        underlayColor='blue'
+        onPress={ this.handleNavigation.bind(this) }>
+
+          <Text style={styles.text}> Get Directions </Text>
+
+        </TouchableHighlight>
+      </View>
+    );
+  }
+
 
   componentWillMount() {
     navigator.geolocation.getCurrentPosition(
@@ -37,6 +109,10 @@ export default class FindMyCar extends Component {
   }
 
   componentDidMount() {
+    this.mapRef.fitToSuppliedMarkers(
+      [ 'carMarker', 'personMarker' ],
+        false
+      );
     BackAndroid.addEventListener('hardwareBackPress', () => {
       if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
           this.props.navigator.pop();
@@ -53,18 +129,19 @@ export default class FindMyCar extends Component {
           return true;
       }
       return false;
-    }); 
+    });
   }
 
   getDirections() {
     let directions = [];
     fetch('https://maps.googleapis.com/maps/api/directions/json?origin=' +
      this.state.latitude + ',' + this.state.longitude + '&destination=' +
-      37.78825 + ',' + -122.4324 + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68')
-    .then((response) => { 
+      this.props.latitude + ',' + this.props.latitude + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68')
+    .then((response) => {
       let res = JSON.parse(response._bodyInit);
       let steps = res.routes[0].legs[0].steps;
       let len = steps.length;
+      let skipped = false;
       let safety;
       for (let i = 0; i < len; i++) {
         let instruction = '';
@@ -81,16 +158,24 @@ export default class FindMyCar extends Component {
             }
           } else {
             let char = instructions[j];
-            if ((char.charCodeAt(0) > 64 && char.charCodeAt(0) < 91) && 
+            if ((char.charCodeAt(0) > 64 && char.charCodeAt(0) < 91) &&
               instruction[instruction.length - 1] !== ' ') {
               instruction += ' ';
             }
             instruction += instructions[j];
           }
         }
+        if (!skipped) {
+          if (instruction.length <= 26) {
+            if (instruction.trim() === 'Head') continue;
+            this.directionContainerHeight = 108;
+            this.initialHeight = 108;
+          }
+          skipped = true;
+        }
         directions.push(instruction);
       }
-      this.setState({directionList: directions});
+      this.directionList = directions;
     })
     .catch((err) => {
       console.log(err);
@@ -98,25 +183,26 @@ export default class FindMyCar extends Component {
   }
 
   postDirections(directions = []) {
-    if (directions.length === 0) return this.setState({directions: [<Text style={styles.error}> Problem fetching directions </Text>]});
+    if (directions.length === 0) return this.directions = [<View style={styles.directionTextContainer}><Text style={styles.error}> Problem fetching directions </Text></View>];
     let result = [];
     for (let i = 0; i < directions.length; i++) {
       result.push(<View style={styles.directionTextContainer}><Text style={styles.directionText}>{directions[i]}</Text></View>);
     }
-    this.setState({directions: result});
+    this.directions = result;
     styles.directionsContainer = {
         position: 'absolute',
         top: 0,
         right: 0,
         left: 0,
-        height: 80,
+        height: this.directionContainerHeight,
         zIndex: 10,
-        backgroundColor: 'white'
+        backgroundColor: '#48BBEC'
       }
+      this.forceUpdate();
     };
 
   handleNavigation() {
-    this.postDirections(this.state.directionList);    
+    this.postDirections(this.directionList);
     const keepPace = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
         position => {
@@ -139,68 +225,32 @@ export default class FindMyCar extends Component {
   }
 
   handleContainerResize(evt) {
-    styles.directionsContainer = {
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      left: 0,
-      height: evt.nativeEvent.pageY,
-      zIndex: 15,
-      backgroundColor: 'white'
-    };
-    this.forceUpdate();
-  }
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <View 
-        style={styles.directionsContainer} 
-        onTouchMove={ this.handleContainerResize.bind(this) }>
-
-          { this.state.directions }
-
-        </View>
-        <MapView 
-          style={styles.map}
-          mapType="hybrid"
-          initialRegion={{
-            latitude: this.props.latitude ? this.props.latitude : 37.78825,
-            longitude: this.props.longitude ? this.props.longitude : -122.4324,
-            latitudeDelta: 0.0048,
-            longitudeDelta: 0.0020
-          }}>
-
-          <MapView.Marker
-            coordinate={
-              {
-                latitude: this.props.latitude,
-                longitude: this.props.longitude
-              }
-            }
-            title={ 'You are parked here' }/>
-
-          <MapView.Marker
-            coordinate={
-              {
-                latitude: this.state.latitude,
-                longitude: this.state.longitude
-              }
-            }
-            pinColor='green'/>
-
-        </MapView>
-        <TouchableHighlight 
-        style={styles.button}
-        underlayColor='blue'
-        onPress={ this.handleNavigation.bind(this) }>
-
-          <Text style={styles.text}> Get Directions </Text>
-
-        </TouchableHighlight>
-      </View>
-    );
-  }
+    if (this.directionContainerHeight >= this.initialHeight) {
+      styles.directionsContainer = {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        left: 0,
+        height: evt.nativeEvent.pageY,
+        zIndex: 15,
+        backgroundColor: '#48BBEC'
+      };
+      this.directionContainerHeight = evt.nativeEvent.pageY;
+    } else {
+      styles.directionsContainer = {
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          left: 0,
+          height: this.initialHeight,
+          zIndex: 10,
+          backgroundColor: '#48BBEC'
+        }
+      this.directionContainerHeight = this.initialHeight;
+      }
+      this.forceUpdate();
+    }
 }
 
 
@@ -220,7 +270,7 @@ const styles = StyleSheet.create({
     paddingBottom: 6
   },
   directionText: {
-    color: 'blue',
+    color: 'white',
     paddingLeft: 25,
     fontSize: 28
   },
@@ -230,6 +280,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0
+  },
+  customTooltip: {
+    backgroundColor: '#48BBEC',
+    borderRadius: 5,
+    padding: 5,
+    height: 28,
+    justifyContent: 'center'
   },
   button: {
     marginBottom: 90,
@@ -242,9 +299,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'center',
     backgroundColor: 'green'
-  },    
+  },
   text: {
     fontSize: 36,
-    color: 'white'    
+    color: 'white'
   },
 });
