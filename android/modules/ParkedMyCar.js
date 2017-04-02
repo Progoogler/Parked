@@ -51,10 +51,12 @@ export default class ParkedMyCar extends Component {
 
     return (
       <View style={styles.container}>
-        <MapView
+        <MapView.Animated
           style={styles.map}
           //customMapStyle={mapStyle}
+          ref={ref => { this.animatedMap = ref; }}
           mapType="hybrid"
+          showsUserLocation={true}
 
           initialRegion={{
             latitude: this.props.latitude ? this.props.latitude : this.state.latitude,
@@ -65,7 +67,7 @@ export default class ParkedMyCar extends Component {
 
           { this.state.marker.test }
 
-        </MapView>
+        </MapView.Animated>
 
         <View style={ this.state.checkmark }>
           <Image source={require('../../resources/images/checkmark.png')} />
@@ -95,7 +97,6 @@ export default class ParkedMyCar extends Component {
         }, error => console.log(error), { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
       );
     }
-    this.setMarker();
   }
 
   componentDidMount() {
@@ -106,6 +107,7 @@ export default class ParkedMyCar extends Component {
       }
       return false
     });
+    this.setMarker();
   };
 
   componentWillUnmount() {
@@ -153,15 +155,17 @@ export default class ParkedMyCar extends Component {
     if (!this.props.latitude) {
       await navigator.geolocation.getCurrentPosition(
         position => {
+          let latitude = parseFloat(position.coords.latitude);
+          let longitude = parseFloat(position.coords.longitude);
           this.setState({
-            latitude: parseFloat(position.coords.latitude),
-            longitude: parseFloat(position.coords.longitude),
+            latitude: latitude,
+            longitude: longitude,
             marker: {test :
             <MapView.Marker draggable
               coordinate={
                 {
-                  latitude: this.state.latitude,
-                  longitude: this.state.longitude
+                  latitude: latitude,
+                  longitude: longitude
                 }
               }
               onDragEnd={(e) => {
@@ -177,7 +181,11 @@ export default class ParkedMyCar extends Component {
             </MapView.Marker>
           }
         });
-        }, error => console.log(error), { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
+        this.animatedMap._component.animateToCoordinate({
+            latitude: latitude,
+            longitude: longitude
+        }, 1500);
+      }, error => console.log(error), { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
       )
     } else {
       this.setState({test:
@@ -202,6 +210,10 @@ export default class ParkedMyCar extends Component {
       });
     }
     this.forceUpdate();
+
+    console.log(this.animatedMap._component.animateToCoordinate)
+    //this.refs._MapView.fitToElements(true);
+    //this.forceUpdate();
   }
 }
 
