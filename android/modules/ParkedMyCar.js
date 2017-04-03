@@ -94,7 +94,7 @@ export default class ParkedMyCar extends Component {
 
   componentWillMount() {
 
-    if (!this.props.latitude) {
+    if (isNaN(this.props.latitude) || !this.props.latitude) {
       navigator.geolocation.getCurrentPosition(
         position => {
           let latitude = parseFloat(position.coords.latitude);

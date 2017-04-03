@@ -74,7 +74,7 @@ export default class FindMyCar extends Component {
 
   async getCoords() {
     try {
-      if (isNaN(this.props.latitude) || this.props.latitude === undefined) {
+      if (isNaN(this.props.latitude) || !this.props.latitude) {
         this.setState({
           latitude: parseFloat(await AsyncStorage.getItem('@Parked:latitude')),
           longitude: parseFloat(await AsyncStorage.getItem('@Parked:longitude'))
@@ -126,7 +126,7 @@ export default class FindMyCar extends Component {
   }
 
   setMarker() {
-    if (isNaN(this.props.latitude) || this.props.latitude === undefined) {
+    if (isNaN(this.props.latitude) || !this.props.latitude) {
       this.setState({
         marker: {insert:
           <MapView.Marker
