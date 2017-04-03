@@ -159,7 +159,7 @@ export default class ParkedMyCar extends Component {
           this.setState({
             latitude: latitude,
             longitude: longitude,
-            marker: {insert :
+            marker: {insert:
             <MapView.Marker draggable
               coordinate={
                 {
@@ -187,7 +187,8 @@ export default class ParkedMyCar extends Component {
       }, error => console.log(error), { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
       )
     } else {
-      this.setState({insert:
+      this.setState({
+        marker: {insert:
         <MapView.Marker draggable
           coordinate={
             {
@@ -206,7 +207,7 @@ export default class ParkedMyCar extends Component {
             <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are parked here</Text></View>
           </MapView.Callout>
         </MapView.Marker>
-      });
+      }});
     }
   }
 }
