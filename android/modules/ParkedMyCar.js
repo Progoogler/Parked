@@ -18,7 +18,7 @@ export default class ParkedMyCar extends Component {
       latitude: this.props.latitude  || 37.78825,
       longitude: this.props.longitude || -122.4324,
       checkmark: {opacity: 0},
-      marker: { test: <View></View> }
+      marker: { insert: <View></View> }
     }
   }
 
@@ -56,7 +56,6 @@ export default class ParkedMyCar extends Component {
           //customMapStyle={mapStyle}
           ref={ref => { this.animatedMap = ref; }}
           mapType="hybrid"
-          showsUserLocation={true}
 
           initialRegion={{
             latitude: this.props.latitude ? this.props.latitude : this.state.latitude,
@@ -65,7 +64,7 @@ export default class ParkedMyCar extends Component {
             longitudeDelta: 0.0020
           }}>
 
-          { this.state.marker.test }
+          { this.state.marker.insert }
 
         </MapView.Animated>
 
@@ -151,7 +150,7 @@ export default class ParkedMyCar extends Component {
   }
 
   async setMarker() {
-    let result = [];
+
     if (!this.props.latitude) {
       await navigator.geolocation.getCurrentPosition(
         position => {
@@ -160,7 +159,7 @@ export default class ParkedMyCar extends Component {
           this.setState({
             latitude: latitude,
             longitude: longitude,
-            marker: {test :
+            marker: {insert :
             <MapView.Marker draggable
               coordinate={
                 {
@@ -188,7 +187,7 @@ export default class ParkedMyCar extends Component {
       }, error => console.log(error), { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
       )
     } else {
-      this.setState({test:
+      this.setState({insert:
         <MapView.Marker draggable
           coordinate={
             {
@@ -209,11 +208,6 @@ export default class ParkedMyCar extends Component {
         </MapView.Marker>
       });
     }
-    this.forceUpdate();
-
-    console.log(this.animatedMap._component.animateToCoordinate)
-    //this.refs._MapView.fitToElements(true);
-    //this.forceUpdate();
   }
 }
 
