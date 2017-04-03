@@ -12,10 +12,10 @@ import MapView from 'react-native-maps';
 export default class FindMyCar extends Component {
   constructor(props) {
     super(props);
-    this.mapRef = null;
     this.state = {
-      latitude: 0,
-      longitude: 0
+      latitude: this.props.latitude || 37.78825,
+      longitude: this.props.longitude || -122.4324,
+      marker: { insert: <View></View> }
     };
     this.directions = [];
     this.directionList = [];
@@ -24,7 +24,6 @@ export default class FindMyCar extends Component {
   }
 
   render() {
-
     return (
       <View style={styles.container}>
         <View
@@ -34,51 +33,21 @@ export default class FindMyCar extends Component {
           { this.directions }
 
         </View>
-        <MapView
-          ref={(ref) => { this.mapRef = ref }}
+        <MapView.Animated
+          ref={ref => { this.animatedMap = ref; }}
           style={styles.map}
           mapType="hybrid"
+          showsUserLocation={true}
           initialRegion={{
-            latitude: this.props.latitude ? this.props.latitude : 37.78825,
-            longitude: this.props.longitude ? this.props.longitude : -122.4324,
+            latitude: this.state.latitude,
+            longitude: this.state.longitude,
             latitudeDelta: 0.0048,
             longitudeDelta: 0.0020
           }}>
+          { console.log('render', this.props.latitude, 'state', this.state.latitude)}
+          { this.state.marker.insert }
 
-          <MapView.Marker
-            coordinate={
-              {
-                latitude: this.props.latitude,
-                longitude: this.props.longitude
-              }
-            }
-            key={'carMarker'}
-            title={ 'You are parked here' }>
-
-            <MapView.Callout tooltip={true}>
-              <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are parked here</Text></View>
-            </MapView.Callout>
-
-          </MapView.Marker>
-
-          <MapView.Marker
-            coordinate={
-              {
-                latitude: this.state.latitude,
-                longitude: this.state.longitude
-              }
-            }
-            key={'personMarker'}
-            pinColor='green'>
-
-            <MapView.Callout tooltip={true}>
-              <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are here</Text></View>
-            </MapView.Callout>
-
-          </MapView.Marker>
-
-
-        </MapView>
+        </MapView.Animated>
         <TouchableHighlight
         style={styles.button}
         underlayColor='blue'
@@ -91,29 +60,23 @@ export default class FindMyCar extends Component {
     );
   }
 
+  async getCoords() {
+    if (!this.props.latitude) {
+      console.log('this runs')
+      this.setState({
+        latitude: parseFloat(await AsyncStorage.getItem('@Parked:latitude')),
+        longitude: parseFloat(await AsyncStorage.getItem('@Parked:longitude'))
+      });
+      console.log('storage', this.state.latitude)
+    }
+    this.setMarker();
+  }
 
   componentWillMount() {
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        this.setState({
-          latitude: parseFloat(position.coords.latitude),
-          longitude: parseFloat(position.coords.longitude)
-        });
-        this.getDirections();
-      },
-      error => {
-        // error
-      }
-    );
+    this.getCoords();
   }
 
   componentDidMount() {
-    setTimeout(() => {
-      this.mapRef.fitToSuppliedMarkers(
-        [ 'carMarker', 'personMarker' ],
-          false
-        );
-      }, 500);
     BackAndroid.addEventListener('hardwareBackPress', () => {
       if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
           this.props.navigator.pop();
@@ -121,6 +84,7 @@ export default class FindMyCar extends Component {
       }
       return false
     });
+
   };
 
   componentWillUnmount() {
@@ -133,17 +97,67 @@ export default class FindMyCar extends Component {
     });
   }
 
-  getDirections() {
-    let directions = [];
-    let latitude;
-    let longitude;
-    if (!this.props.longitude) {
-      latitude = parseFloat(AsyncStorage.getItem('@Parked:latitude'));
-      longitude = parseFloat(AsyncStorage.getItem('@Parked:longitude'));
+  async setMarker() {
+    if (!this.props.latitude) {
+      console.log('!props', this.state.latitude)
+      await this.setState({
+        marker: {insert:
+          <MapView.Marker
+            coordinate={
+              {
+                latitude: this.state.latitude,
+                longitude: this.state.longitude
+              }
+            }
+            title={ 'You are parked here' }>
+            <MapView.Callout tooltip={true}>
+              <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are parked here</Text></View>
+            </MapView.Callout>
+          </MapView.Marker>
+        }
+      });
+      this.animatedMap._component.animateToCoordinate({
+        latitude: this.state.latitude,
+        longitude: this.state.longitude
+      }, 1500);
+    } else {
+      this.setState({
+        marker: {insert:
+          <MapView.Marker
+            coordinate={
+              {
+                latitude: this.props.latitude,
+                longitude: this.props.longitude
+              }
+            }
+            title={ 'You are parked here' }>
+            <MapView.Callout tooltip={true}>
+              <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are parked here</Text></View>
+            </MapView.Callout>
+          </MapView.Marker>
+        }
+      });
+      this.animatedMap._component.animateToCoordinate({
+        latitude: this.props.latitude,
+        longitude: this.props.longitude
+      }, 1500);
     }
+  }
+
+  async getDirections() {
+    let directions = [];
+    let userLatitude;
+    let userLongitude;
+    await navigator.geolocation.getCurrentPosition(
+      position => {
+        userLatitude = parseFloat(position.coords.latitude);
+        userLongitude = parseFloat(position.coords.longitude);
+      }, error => console.log(error), { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+    );
+
     fetch('https://maps.googleapis.com/maps/api/directions/json?origin=' +
-     this.state.latitude + ',' + this.state.longitude + '&destination=' +
-      (this.props.latitude || latitude) + ',' + (this.props.longitude || longitude) + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68')
+     userLatitude + ',' + userLongitude + '&destination=' +
+      (this.props.latitude || this.state.latitude) + ',' + (this.props.longitude || this.state.latitude) + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68')
     .then((response) => {
       let res = JSON.parse(response._bodyInit);
       let steps = res.routes[0].legs[0].steps;
