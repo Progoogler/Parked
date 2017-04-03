@@ -5,8 +5,8 @@ import {
   View,
   Image,
   BackAndroid,
-  Dimensions,
   TouchableHighlight,
+  ActivityIndicator,
   AsyncStorage
 } from 'react-native';
 import MapView from 'react-native-maps';
@@ -51,6 +51,13 @@ export default class ParkedMyCar extends Component {
 
     return (
       <View style={styles.container}>
+        <View style={{zIndex: 10}}>
+          <ActivityIndicator
+            animating={this.state.animating}
+            style={styles.activity}
+            size='large'/>
+        </View>
+
         <MapView.Animated
           style={styles.map}
           //customMapStyle={mapStyle}
@@ -172,10 +179,10 @@ export default class ParkedMyCar extends Component {
                   latitude: e.nativeEvent.coordinate.latitude,
                   longitude: e.nativeEvent.coordinate.longitude
                 });
-              }}
-              title={ 'You are parked here' }>
+              }}>
+
               <MapView.Callout tooltip={true}>
-                <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are parked here</Text></View>
+                <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
               </MapView.Callout>
             </MapView.Marker>
           }
@@ -209,6 +216,7 @@ export default class ParkedMyCar extends Component {
         </MapView.Marker>
       }});
     }
+    this.setState({animating: false});
   }
 }
 
@@ -235,6 +243,9 @@ const styles = StyleSheet.create({
     padding: 5,
     height: 28,
     justifyContent: 'center'
+  },
+  activity: {
+    marginBottom: 100
   },
   button: {
     marginBottom: 90,

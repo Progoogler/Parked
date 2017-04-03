@@ -5,8 +5,9 @@ import {
   View,
   BackAndroid,
   TouchableHighlight,
-  AsyncStorage,
-  ActivityIndicator
+  ActivityIndicator,
+  AsyncStorage
+
 } from 'react-native';
 import MapView from 'react-native-maps';
 
@@ -16,7 +17,8 @@ export default class FindMyCar extends Component {
     this.state = {
       latitude: undefined,
       longitude: undefined,
-      marker: { insert: <View></View> }
+      marker: { insert: <View></View> },
+      animating: true
     };
     this.directions = [];
     this.directionList = [];
@@ -30,15 +32,18 @@ export default class FindMyCar extends Component {
     return (
       <View style={styles.container}>
         <View style={{zIndex: 10}}>
-          <ActivityIndicator/>
+          <ActivityIndicator
+            animating={this.state.animating}
+            style={styles.activity}
+            size='large'/>
         </View>
 
         <View
         style={styles.directionsContainer}
         onTouchMove={ this.handleContainerResize.bind(this) }>
           { this.directions }
-  {console.log('map render', this.state.latitude)}
         </View>
+
         <MapView.Animated
           ref={ref => { this.animatedMap = ref; }}
           style={styles.map}
@@ -70,13 +75,11 @@ export default class FindMyCar extends Component {
   async getCoords() {
     try {
       if (isNaN(this.props.latitude) || this.props.latitude === undefined) {
-        console.log('getCoords storage', 'props', this.props.latitude, 'isnan', isNaN(this.props.latitude), 'if', isNaN(this.props.latitude) || this.props.latitude === undefined)
         this.setState({
           latitude: parseFloat(await AsyncStorage.getItem('@Parked:latitude')),
           longitude: parseFloat(await AsyncStorage.getItem('@Parked:longitude'))
         });
       } else {
-        console.log('getCoords props', 'props', this.props.latitude, 'isnan', isNaN(this.props.latitude), 'if', isNaN(this.props.latitude) || this.props.latitude === undefined)
         this.setState({
           latitude: this.props.latitude,
           longitude: this.props.longitude
@@ -112,6 +115,7 @@ export default class FindMyCar extends Component {
   };
 
   componentWillUnmount() {
+    styles.directionsContainer = {zIndex: -10};
     BackAndroid.removeEventListener('hardwareBackPress', () => {
       if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
           this.props.navigator.pop();
@@ -122,8 +126,6 @@ export default class FindMyCar extends Component {
   }
 
   setMarker() {
-    console.log('marker coords', 'props', this.props.latitude, 'state', this.state.latitude)
-    console.log('bools', this.props.latitude === undefined, isNaN(this.props.latitude), this.props.latitude === undefined || isNaN(this.props.latitude) )
     if (isNaN(this.props.latitude) || this.props.latitude === undefined) {
       this.setState({
         marker: {insert:
@@ -133,10 +135,9 @@ export default class FindMyCar extends Component {
                 latitude: this.state.latitude,
                 longitude: this.state.longitude
               }
-            }
-            title={ 'You are parked here' }>
+            }>
             <MapView.Callout tooltip={true}>
-              <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are parked here</Text></View>
+              <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
             </MapView.Callout>
           </MapView.Marker>
         }
@@ -146,7 +147,6 @@ export default class FindMyCar extends Component {
         longitude: this.state.longitude
       }, 1500);
     } else {
-      console.log('use props to set marker')
       this.setState({
         marker: {insert:
           <MapView.Marker
@@ -155,10 +155,9 @@ export default class FindMyCar extends Component {
                 latitude: this.props.latitude,
                 longitude: this.props.longitude
               }
-            }
-            title={ 'You are parked here' }>
+            }>
             <MapView.Callout tooltip={true}>
-              <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are parked here</Text></View>
+              <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
             </MapView.Callout>
           </MapView.Marker>
         }
@@ -168,11 +167,10 @@ export default class FindMyCar extends Component {
         longitude: this.props.longitude
       }, 1500);
     }
+    this.setState({animating: false});
   }
 
   getDirections() {
-
-    console.log('getD', 'userL', this.userLatitude, 'state', this.state.latitude)
     let directions = [];
     let key = 0;
     fetch('https://maps.googleapis.com/maps/api/directions/json?origin=' +
@@ -224,12 +222,16 @@ export default class FindMyCar extends Component {
   }
 
   postDirections(directions = []) {
-    if (directions.length === 0) return this.directions = [<View style={styles.directionTextContainer}><Text style={styles.error}> Problem fetching directions </Text></View>];
-    let result = [];
-    for (let i = 0; i < directions.length; i++) {
-      result.push(<View style={styles.directionTextContainer} key={directions[i].key}><Text key={directions[i].key} style={styles.directionText}>{directions[i].instruction}</Text></View>);
+    this.setState({animating: true});
+    if (directions.length === 0) {
+      this.directions = [<View style={styles.errorTextContainer}><Text style={styles.error}> Problem fetching directions </Text></View>];
+    } else {
+      let result = [];
+      for (let i = 0; i < directions.length; i++) {
+        result.push(<View style={styles.directionTextContainer} key={directions[i].key}><Text key={directions[i].key} style={styles.directionText}>{directions[i].instruction}</Text></View>);
+      }
+      this.directions = result;
     }
-    this.directions = result;
     styles.directionsContainer = {
         position: 'absolute',
         top: 0,
@@ -239,7 +241,7 @@ export default class FindMyCar extends Component {
         zIndex: 10,
         backgroundColor: '#48BBEC'
       }
-      this.forceUpdate();
+      this.setState({animating: false});
     };
 
   handleNavigation() {
@@ -315,6 +317,14 @@ const styles = StyleSheet.create({
     paddingLeft: 25,
     fontSize: 28
   },
+  errorTextContainer: {
+    padding: 20
+  },
+  error: {
+    color: 'red',
+    paddingLeft: 5,
+    fontSize: 28
+  },
   map: {
     position: 'absolute',
     top: 0,
@@ -328,6 +338,9 @@ const styles = StyleSheet.create({
     padding: 5,
     height: 28,
     justifyContent: 'center'
+  },
+  activity: {
+    marginBottom: 200
   },
   button: {
     marginBottom: 90,
