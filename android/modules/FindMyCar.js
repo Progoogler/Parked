@@ -5,7 +5,8 @@ import {
   View,
   BackAndroid,
   TouchableHighlight,
-  AsyncStorage
+  AsyncStorage,
+  ActivityIndicator
 } from 'react-native';
 import MapView from 'react-native-maps';
 
@@ -13,8 +14,8 @@ export default class FindMyCar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      latitude: this.props.latitude || 37.78825,
-      longitude: this.props.longitude || -122.4324,
+      latitude: undefined,
+      longitude: undefined,
       marker: { insert: <View></View> }
     };
     this.directions = [];
@@ -28,25 +29,29 @@ export default class FindMyCar extends Component {
   render() {
     return (
       <View style={styles.container}>
+        <View style={{zIndex: 10}}>
+          <ActivityIndicator/>
+        </View>
+
         <View
         style={styles.directionsContainer}
         onTouchMove={ this.handleContainerResize.bind(this) }>
-
           { this.directions }
-
+  {console.log('map render', this.state.latitude)}
         </View>
         <MapView.Animated
           ref={ref => { this.animatedMap = ref; }}
           style={styles.map}
           mapType="hybrid"
           showsUserLocation={true}
+
           initialRegion={{
-            latitude: this.state.latitude,
-            longitude: this.state.longitude,
+            latitude: 37.78825,
+            longitude: -122.4324,
             latitudeDelta: 0.0048,
             longitudeDelta: 0.0020
           }}>
-          { console.log('render', this.props.latitude, 'state', this.state.latitude)}
+
           { this.state.marker.insert }
 
         </MapView.Animated>
@@ -63,17 +68,30 @@ export default class FindMyCar extends Component {
   }
 
   async getCoords() {
-    if (!this.props.latitude) {
-      this.setState({
-        latitude: parseFloat(await AsyncStorage.getItem('@Parked:latitude')),
-        longitude: parseFloat(await AsyncStorage.getItem('@Parked:longitude'))
-      });
+    try {
+      if (isNaN(this.props.latitude) || this.props.latitude === undefined) {
+        console.log('getCoords storage', 'props', this.props.latitude, 'isnan', isNaN(this.props.latitude), 'if', isNaN(this.props.latitude) || this.props.latitude === undefined)
+        this.setState({
+          latitude: parseFloat(await AsyncStorage.getItem('@Parked:latitude')),
+          longitude: parseFloat(await AsyncStorage.getItem('@Parked:longitude'))
+        });
+      } else {
+        console.log('getCoords props', 'props', this.props.latitude, 'isnan', isNaN(this.props.latitude), 'if', isNaN(this.props.latitude) || this.props.latitude === undefined)
+        this.setState({
+          latitude: this.props.latitude,
+          longitude: this.props.longitude
+        });
+      }
+      AsyncStorage.setItem('@Parked:latitude', this.state.latitude + '');
+      AsyncStorage.setItem('@Parked:longitude', this.state.longitude + '');
+    } catch(error) {
+      console.log('async getCoords() exception', error);
     }
-    this.setMarker();
     navigator.geolocation.getCurrentPosition(
       position => {
         this.userLatitude = parseFloat(position.coords.latitude);
         this.userLongitude = parseFloat(position.coords.longitude);
+        this.setMarker();
         this.getDirections();
       }, error => console.log(error), { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
     );
@@ -103,11 +121,11 @@ export default class FindMyCar extends Component {
     });
   }
 
-  async setMarker() {
-    console.log('animated',this.animatedMap._component.animateToCoordinate)
-    if (!this.props.latitude) {
-      console.log('!props', this.state.latitude)
-      await this.setState({
+  setMarker() {
+    console.log('marker coords', 'props', this.props.latitude, 'state', this.state.latitude)
+    console.log('bools', this.props.latitude === undefined, isNaN(this.props.latitude), this.props.latitude === undefined || isNaN(this.props.latitude) )
+    if (isNaN(this.props.latitude) || this.props.latitude === undefined) {
+      this.setState({
         marker: {insert:
           <MapView.Marker
             coordinate={
@@ -128,6 +146,7 @@ export default class FindMyCar extends Component {
         longitude: this.state.longitude
       }, 1500);
     } else {
+      console.log('use props to set marker')
       this.setState({
         marker: {insert:
           <MapView.Marker
@@ -149,17 +168,18 @@ export default class FindMyCar extends Component {
         longitude: this.props.longitude
       }, 1500);
     }
-
   }
 
   getDirections() {
+
+    console.log('getD', 'userL', this.userLatitude, 'state', this.state.latitude)
     let directions = [];
     let key = 0;
     fetch('https://maps.googleapis.com/maps/api/directions/json?origin=' +
      this.userLatitude + ',' + this.userLongitude + '&destination=' +
-      (this.props.latitude || this.state.latitude) + ',' + (this.props.longitude || this.state.latitude) + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68')
+      this.state.latitude + ',' + this.state.latitude + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68')
     .then((response) => {
-      let res = JSON.parse(response._bodyInit);
+      let res = JSON.parse(response._bodyInit); console.log(res)
       let steps = res.routes[0].legs[0].steps;
       let len = steps.length;
       let skipped = false;

@@ -30,8 +30,7 @@ export default class Main extends Component {
   }
 
   render() {
-    this.latitude = parseFloat(AsyncStorage.getItem('@Parked:latitude'));
-    this.longitude = parseFloat(AsyncStorage.getItem('@Parked:longitude'));
+
     return (
       <View style={styles.container}>
 
@@ -62,12 +61,6 @@ export default class Main extends Component {
   async componentWillMount() {
     this.latitude = parseFloat(await AsyncStorage.getItem('@Parked:latitude'));
     this.longitude = parseFloat(await AsyncStorage.getItem('@Parked:longitude'));
-  }
-
-  componentDidMount() {
-    BackAndroid.addEventListener('hardwareBackPress', () => {
-      this.exitApp;
-    });
     LocationServicesDialogBox.checkLocationServicesIsEnabled({
         message: "<h2>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
         ok: "YES",
@@ -83,6 +76,12 @@ export default class Main extends Component {
       }.bind(this)
     ).catch((error) => {
       console.log(error.message);
+    });
+  }
+
+  componentDidMount() {
+    BackAndroid.addEventListener('hardwareBackPress', () => {
+      this.exitApp;
     });
   }
 
