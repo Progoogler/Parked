@@ -17,7 +17,7 @@ export default class Logo extends Component {
   }
 
   render() {
-    console.log(this.state.marginLeftOfCar)
+
     setTimeout(() => {
       if (!this.state.displayed) {
         this.setState({ displayed: true });
@@ -39,13 +39,18 @@ export default class Logo extends Component {
     );
   }
 
+
+
+
+
   componentDidMount() {
     setTimeout(function() {
       this.state.marginLeftOfCar.setValue(30);
       Animated.spring(
+        this.state.marginLeftOfCar,
         {
           toValue: -1200,
-          friction: 1                
+          friction: 1,
         }
       ).start()
     }.bind(this), 1300);
