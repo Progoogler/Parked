@@ -21,6 +21,8 @@ export default class FindMyCar extends Component {
     this.directionList = [];
     this.directionContainerHeight = 80;
     this.initialHeight = 80;
+    this.userLatitude = undefined;
+    this.userLongitude = undefined;
   }
 
   render() {
@@ -62,14 +64,19 @@ export default class FindMyCar extends Component {
 
   async getCoords() {
     if (!this.props.latitude) {
-      console.log('this runs')
       this.setState({
         latitude: parseFloat(await AsyncStorage.getItem('@Parked:latitude')),
         longitude: parseFloat(await AsyncStorage.getItem('@Parked:longitude'))
       });
-      console.log('storage', this.state.latitude)
     }
     this.setMarker();
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        this.userLatitude = parseFloat(position.coords.latitude);
+        this.userLongitude = parseFloat(position.coords.longitude);
+        this.getDirections();
+      }, error => console.log(error), { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
+    );
   }
 
   componentWillMount() {
@@ -84,7 +91,6 @@ export default class FindMyCar extends Component {
       }
       return false
     });
-
   };
 
   componentWillUnmount() {
@@ -98,6 +104,7 @@ export default class FindMyCar extends Component {
   }
 
   async setMarker() {
+    console.log('animated',this.animatedMap._component.animateToCoordinate)
     if (!this.props.latitude) {
       console.log('!props', this.state.latitude)
       await this.setState({
@@ -142,21 +149,14 @@ export default class FindMyCar extends Component {
         longitude: this.props.longitude
       }, 1500);
     }
+
   }
 
-  async getDirections() {
+  getDirections() {
     let directions = [];
-    let userLatitude;
-    let userLongitude;
-    await navigator.geolocation.getCurrentPosition(
-      position => {
-        userLatitude = parseFloat(position.coords.latitude);
-        userLongitude = parseFloat(position.coords.longitude);
-      }, error => console.log(error), { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
-    );
-
+    let key = 0;
     fetch('https://maps.googleapis.com/maps/api/directions/json?origin=' +
-     userLatitude + ',' + userLongitude + '&destination=' +
+     this.userLatitude + ',' + this.userLongitude + '&destination=' +
       (this.props.latitude || this.state.latitude) + ',' + (this.props.longitude || this.state.latitude) + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68')
     .then((response) => {
       let res = JSON.parse(response._bodyInit);
@@ -194,7 +194,7 @@ export default class FindMyCar extends Component {
           }
           skipped = true;
         }
-        directions.push(instruction);
+        directions.push({key: key++, instruction});
       }
       this.directionList = directions;
     })
@@ -207,7 +207,7 @@ export default class FindMyCar extends Component {
     if (directions.length === 0) return this.directions = [<View style={styles.directionTextContainer}><Text style={styles.error}> Problem fetching directions </Text></View>];
     let result = [];
     for (let i = 0; i < directions.length; i++) {
-      result.push(<View style={styles.directionTextContainer}><Text style={styles.directionText}>{directions[i]}</Text></View>);
+      result.push(<View style={styles.directionTextContainer} key={directions[i].key}><Text key={directions[i].key} style={styles.directionText}>{directions[i].instruction}</Text></View>);
     }
     this.directions = result;
     styles.directionsContainer = {
