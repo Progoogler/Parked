@@ -85,8 +85,6 @@ export default class FindMyCar extends Component {
           longitude: this.props.longitude
         });
       }
-      AsyncStorage.setItem('@Parked:latitude', this.state.latitude + '');
-      AsyncStorage.setItem('@Parked:longitude', this.state.longitude + '');
     } catch(error) {
       console.log('async getCoords() exception', error);
     }
@@ -171,11 +169,12 @@ export default class FindMyCar extends Component {
   }
 
   getDirections() {
+    let url = ('https://maps.googleapis.com/maps/api/directions/json?origin=' +
+     this.userLatitude + ',' + this.userLongitude + '&destination=' +
+      this.state.latitude + ',' + this.state.longitude + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68');
     let directions = [];
     let key = 0;
-    fetch('https://maps.googleapis.com/maps/api/directions/json?origin=' +
-     this.userLatitude + ',' + this.userLongitude + '&destination=' +
-      this.state.latitude + ',' + this.state.latitude + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68')
+    fetch(url)
     .then((response) => {
       let res = JSON.parse(response._bodyInit); console.log(res)
       let steps = res.routes[0].legs[0].steps;
@@ -224,7 +223,7 @@ export default class FindMyCar extends Component {
   postDirections(directions = []) {
     this.setState({animating: true});
     if (directions.length === 0) {
-      this.directions = [<View style={styles.errorTextContainer}><Text style={styles.error}> Problem fetching directions </Text></View>];
+      this.directions = [<View style={styles.errorTextContainer}><Text style={styles.error}> Directions could not be loaded. Please follow map. </Text></View>];
     } else {
       let result = [];
       for (let i = 0; i < directions.length; i++) {
@@ -317,12 +316,9 @@ const styles = StyleSheet.create({
     paddingLeft: 25,
     fontSize: 28
   },
-  errorTextContainer: {
-    padding: 20
-  },
   error: {
     color: 'red',
-    paddingLeft: 5,
+    textAlign: 'center',
     fontSize: 28
   },
   map: {
