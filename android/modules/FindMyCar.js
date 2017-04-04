@@ -10,6 +10,7 @@ import {
 
 } from 'react-native';
 import MapView from 'react-native-maps';
+import keyStore from '../../resources/key/mapApiKey.js';
 
 export default class FindMyCar extends Component {
   constructor(props) {
@@ -26,6 +27,7 @@ export default class FindMyCar extends Component {
     this.initialHeight = 80;
     this.userLatitude = undefined;
     this.userLongitude = undefined;
+    this.keyGen = new keyStore();
   }
 
   render() {
@@ -169,9 +171,10 @@ export default class FindMyCar extends Component {
   }
 
   getDirections() {
+    const apiKey = this.keyGen.getKey();
     let url = ('https://maps.googleapis.com/maps/api/directions/json?origin=' +
      this.userLatitude + ',' + this.userLongitude + '&destination=' +
-      this.state.latitude + ',' + this.state.longitude + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68');
+      this.state.latitude + ',' + this.state.longitude + '&mode=walking&key=' + apiKey);
     let directions = [];
     let key = 0;
     fetch(url)
