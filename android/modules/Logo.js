@@ -25,7 +25,7 @@ export default class Logo extends Component {
       } else {
         return;
       }
-    }, 2000);
+    }, 1400);
 
     return (
       <View style={styles.container}>
@@ -53,7 +53,7 @@ export default class Logo extends Component {
           friction: 1,
         }
       ).start()
-    }.bind(this), 1300);
+    }.bind(this), 700);
   }
 }
 
