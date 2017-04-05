@@ -106,7 +106,7 @@ export default class ParkedMyCar extends Component {
     } else {
       this.setMarker();
       AsyncStorage.setItem('@Parked:latitude', this.props.latitude + '');
-      AsyncStorage.setItem('@Parked:longitude', this.props.longitude + '');      
+      AsyncStorage.setItem('@Parked:longitude', this.props.longitude + '');
     }
   }
 
@@ -118,7 +118,6 @@ export default class ParkedMyCar extends Component {
       }
       return false
     });
-    this.setMarker();
   };
 
   componentWillUnmount() {
