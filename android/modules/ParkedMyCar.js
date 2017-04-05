@@ -18,14 +18,12 @@ export default class ParkedMyCar extends Component {
       latitude: this.props.latitude  || 37.78825,
       longitude: this.props.longitude || -122.4324,
       checkmark: {opacity: 0},
-      marker: { insert: <View></View> }
+      marker: { insert: <View></View> },
+      animating: true
     }
   }
 
   render() {
-
-    AsyncStorage.setItem('@Parked:latitude', this.state.latitude + '');
-    AsyncStorage.setItem('@Parked:longitude', this.state.longitude + '');
 
     // invalid props.style key featureType supplied to AIRMap
 /*    let mapStyle = [
@@ -100,8 +98,15 @@ export default class ParkedMyCar extends Component {
           let latitude = parseFloat(position.coords.latitude);
           let longitude = parseFloat(position.coords.longitude);
           this.setState({ latitude, longitude });
+          this.setMarker();
+          AsyncStorage.setItem('@Parked:latitude', this.state.latitude + '');
+          AsyncStorage.setItem('@Parked:longitude', this.state.longitude + '');
         }, error => console.log(error), { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
       );
+    } else {
+      this.setMarker();
+      AsyncStorage.setItem('@Parked:latitude', this.props.latitude + '');
+      AsyncStorage.setItem('@Parked:longitude', this.props.longitude + '');      
     }
   }
 
@@ -156,43 +161,35 @@ export default class ParkedMyCar extends Component {
     }
   }
 
-  async setMarker() {
+  setMarker() {
 
-    if (!this.props.latitude) {
-      await navigator.geolocation.getCurrentPosition(
-        position => {
-          let latitude = parseFloat(position.coords.latitude);
-          let longitude = parseFloat(position.coords.longitude);
-          this.setState({
-            latitude: latitude,
-            longitude: longitude,
-            marker: {insert:
-            <MapView.Marker draggable
-              coordinate={
-                {
-                  latitude: latitude,
-                  longitude: longitude
-                }
+    if (isNaN(this.props.latitude) || !this.props.latitude) {
+        this.setState({
+          marker: {insert:
+          <MapView.Marker draggable
+            coordinate={
+              {
+                latitude: this.state.latitude,
+                longitude: this.state.longitude
               }
-              onDragEnd={(e) => {
-                this.setState({
-                  latitude: e.nativeEvent.coordinate.latitude,
-                  longitude: e.nativeEvent.coordinate.longitude
-                });
-              }}>
+            }
+            onDragEnd={(e) => {
+              this.setState({
+                latitude: e.nativeEvent.coordinate.latitude,
+                longitude: e.nativeEvent.coordinate.longitude
+              });
+            }}>
 
-              <MapView.Callout tooltip={true}>
-                <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
-              </MapView.Callout>
-            </MapView.Marker>
-          }
-        });
-        this.animatedMap._component.animateToCoordinate({
-            latitude: latitude,
-            longitude: longitude
-        }, 1500);
-      }, error => console.log(error), { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
-      )
+            <MapView.Callout tooltip={true}>
+              <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
+            </MapView.Callout>
+          </MapView.Marker>
+        }
+      });
+      this.animatedMap._component.animateToCoordinate({
+          latitude: this.state.latitude,
+          longitude: this.state.longitude
+      }, 1500);
     } else {
       this.setState({
         marker: {insert:
@@ -214,7 +211,12 @@ export default class ParkedMyCar extends Component {
             <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are parked here</Text></View>
           </MapView.Callout>
         </MapView.Marker>
-      }});
+      }
+    });
+    this.animatedMap._component.animateToCoordinate({
+        latitude: this.props.latitude,
+        longitude: this.props.longitude
+      }, 1500);
     }
     this.setState({animating: false});
   }
