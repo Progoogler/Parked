@@ -2,6 +2,7 @@ package com.parked;
 
 import android.app.Application;
 
+import com.facebook.FacebookSdk;
 import com.facebook.react.ReactApplication;
 import com.showlocationservicesdialogbox.LocationServicesDialogBoxPackage;
 import com.airbnb.android.react.maps.MapsPackage;
