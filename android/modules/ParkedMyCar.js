@@ -15,7 +15,7 @@ export default class ParkedMyCar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      latitude: this.props.latitude  || 37.78825,
+      latitude: this.props.latitude || 37.78825,
       longitude: this.props.longitude || -122.4324,
       checkmark: {opacity: 0},
       marker: { insert: <View></View> },
@@ -91,8 +91,7 @@ export default class ParkedMyCar extends Component {
   }
 
   componentWillMount() {
-
-    if (isNaN(this.props.latitude) || !this.props.latitude) {
+    if (!this.props.latitude || isNaN(this.props.latitude)) {
       navigator.geolocation.getCurrentPosition(
         position => {
           let latitude = parseFloat(position.coords.latitude);
@@ -104,7 +103,7 @@ export default class ParkedMyCar extends Component {
         }, error => console.log(error), { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
       );
     } else {
-      this.setMarker();
+      setTimeout(this.setMarker.bind(this), 2000);
       AsyncStorage.setItem('@Parked:latitude', this.props.latitude + '');
       AsyncStorage.setItem('@Parked:longitude', this.props.longitude + '');
     }
@@ -161,8 +160,7 @@ export default class ParkedMyCar extends Component {
   }
 
   setMarker() {
-
-    if (isNaN(this.props.latitude) || !this.props.latitude) {
+    if (!this.props.latitude || isNaN(this.props.latitude)) {
         this.setState({
           marker: {insert:
           <MapView.Marker draggable
