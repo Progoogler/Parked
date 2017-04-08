@@ -2,12 +2,16 @@ package com.parked;
 
 import android.app.Application;
 
-import com.facebook.FacebookSdk;
+import com.sbugert.rnadmob.RNAdMobPackage;
+
 import com.facebook.react.ReactApplication;
-import com.showlocationservicesdialogbox.LocationServicesDialogBoxPackage;
-import com.airbnb.android.react.maps.MapsPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
+
+import com.showlocationservicesdialogbox.LocationServicesDialogBoxPackage;
+
+import com.airbnb.android.react.maps.MapsPackage;
+
 import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
 
@@ -27,7 +31,9 @@ public class MainApplication extends Application implements ReactApplication {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
             new LocationServicesDialogBoxPackage(),
-            new MapsPackage()
+            new MapsPackage(),
+            new RNAdMobPackage()
+
       );
     }
   };
