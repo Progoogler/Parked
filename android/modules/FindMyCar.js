@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import MapView from 'react-native-maps';
 import keyStore from '../../resources/key/mapApiKey.js';
+import { AdMobBanner } from 'react-native-admob';
 
 export default class FindMyCar extends Component {
   constructor(props) {
@@ -64,12 +65,19 @@ export default class FindMyCar extends Component {
         </MapView.Animated>
         <TouchableHighlight
         style={styles.button}
-        underlayColor='blue'
+        underlayColor='#2F79FB'
         onPress={ this.handleNavigation.bind(this) }>
 
           <Text style={styles.text}> Get Directions </Text>
 
         </TouchableHighlight>
+        <View style={styles.adBanner}>
+          <AdMobBanner
+            bannerSize="smartBanner"
+            adUnitID="ca-app-pub-6795803926768626/6153789791"
+            testDeviceID="EMULATOR"
+            didFailToReceiveAdWithError={this.bannerError} />
+        </View>
       </View>
     );
   }
@@ -179,7 +187,7 @@ export default class FindMyCar extends Component {
     let key = 0;
     fetch(url)
     .then((response) => {
-      let res = JSON.parse(response._bodyInit); console.log(res)
+      let res = JSON.parse(response._bodyInit);
       let steps = res.routes[0].legs[0].steps;
       let len = steps.length;
       let skipped = false;
@@ -342,7 +350,7 @@ const styles = StyleSheet.create({
     marginBottom: 200
   },
   button: {
-    marginBottom: 90,
+    marginBottom: 95,
     width: 300,
     height: 70,
     zIndex: 10,
@@ -357,4 +365,10 @@ const styles = StyleSheet.create({
     fontSize: 36,
     color: 'white'
   },
+  adBanner: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0
+  }
 });

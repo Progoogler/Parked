@@ -10,6 +10,10 @@ import {
   AsyncStorage
 } from 'react-native';
 import MapView from 'react-native-maps';
+import {
+  AdMobBanner,
+  AdMobInterstitial
+} from 'react-native-admob';
 
 export default class ParkedMyCar extends Component {
   constructor(props) {
@@ -49,6 +53,13 @@ export default class ParkedMyCar extends Component {
 
     return (
       <View style={styles.container}>
+        <View style={styles.adBanner}>
+          <AdMobBanner
+            bannerSize="smartBanner"
+            adUnitID="ca-app-pub-6795803926768626/6153789791"
+            testDeviceID="EMULATOR"
+            didFailToReceiveAdWithError={this.bannerError} />
+        </View>
         <View style={{zIndex: 10}}>
           <ActivityIndicator
             animating={this.state.animating}
@@ -79,7 +90,7 @@ export default class ParkedMyCar extends Component {
 
         <TouchableHighlight
           style={styles.button}
-          underlayColor='blue'
+          underlayColor='#2F79FB'
           onPress={ this.saveCoords.bind(this) }>
 
           <Text style={styles.text}> Parked here! </Text>
@@ -100,7 +111,7 @@ export default class ParkedMyCar extends Component {
           this.setMarker();
           AsyncStorage.setItem('@Parked:latitude', this.state.latitude + '');
           AsyncStorage.setItem('@Parked:longitude', this.state.longitude + '');
-        }, error => console.log(error), { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
+        }, error => console.log(error), { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
       );
     } else {
       setTimeout(this.setMarker.bind(this), 2000);
@@ -117,6 +128,14 @@ export default class ParkedMyCar extends Component {
       }
       return false
     });
+    //AdMobInterstitial.setAdUnitID('ca-app-pub-6795803926768626/6153789791');
+    // AdMobInterstitial.setTestDeviceID('353513070582866');
+    // AdMobInterstitial.addEventListener('interstitialDidLoad', () => {
+    //     console.log('ad loaded');
+    // });
+    // AdMobInterstitial.addEventListener('interstitialDidFailToLoad', () => {
+    //   console.log('ad failed to load');
+    // });
   };
 
   componentWillUnmount() {
@@ -148,15 +167,16 @@ export default class ParkedMyCar extends Component {
 
   saveCoords() {
     this.checkStyle();
+    AsyncStorage.setItem('@Parked:latitude', this.state.latitude + '');
+    AsyncStorage.setItem('@Parked:longitude', this.state.longitude + '');
     setTimeout(() => {
       this.setState({checkmark: {opacity: 0}});
     }, 1500);
-    try {
-      AsyncStorage.setItem('@Parked:latitude', this.state.latitude + '');
-      AsyncStorage.setItem('@Parked:longitude', this.state.longitude + '');
-    } catch (error) {
-      console.log(error);
-    }
+    // AdMobInterstitial.requestAd(error => {
+    //   console.log('request error:', error);
+    //   AdMobInterstitial.showAd((error) => { console.log('Parked: interstitial error:', error) });
+    // });
+
   }
 
   setMarker() {
@@ -261,5 +281,12 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 36,
     color: 'white'
+  },
+  adBanner: {
+    position: 'absolute',
+    zIndex: 100,
+    left: 0,
+    right: 0,
+    top: 0
   }
 })

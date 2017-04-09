@@ -11,6 +11,8 @@
     "react-async-render": "0.0.2",
     "react-native": "0.42.3",
     "react-native-android-location-services-dialog-box": "^1.2.0",
+    "react-native-fbads": "^4.1.0",
+    "react-native-fbsdk": "^0.5.0",
     "react-native-maps": "^0.13.1"
   },
   "devDependencies": {
