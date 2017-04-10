@@ -111,7 +111,7 @@ export default class ParkedMyCar extends Component {
           this.setMarker();
           AsyncStorage.setItem('@Parked:latitude', this.state.latitude + '');
           AsyncStorage.setItem('@Parked:longitude', this.state.longitude + '');
-        }, error => console.log(error), { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+        }, error => console.log(error)
       );
     } else {
       setTimeout(this.setMarker.bind(this), 2000);

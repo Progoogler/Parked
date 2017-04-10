@@ -104,7 +104,7 @@ export default class FindMyCar extends Component {
         this.userLongitude = parseFloat(position.coords.longitude);
         this.setMarker();
         this.getDirections();
-      }, error => console.log(error), { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
+      }, error => console.log(error)
     );
   }
 
