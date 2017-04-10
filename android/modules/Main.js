@@ -23,7 +23,6 @@ export default class Main extends Component {
     this.state = {
       latitude: '',
       longitude: '',
-      // style error message
       message: ''
     };
   }

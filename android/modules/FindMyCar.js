@@ -271,7 +271,7 @@ export default class FindMyCar extends Component {
           });
         },
         error => {
-          // error
+          /* error */
         }
       );
     }, 4000);

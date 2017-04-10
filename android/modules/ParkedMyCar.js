@@ -172,11 +172,6 @@ export default class ParkedMyCar extends Component {
     setTimeout(() => {
       this.setState({checkmark: {opacity: 0}});
     }, 1500);
-    // AdMobInterstitial.requestAd(error => {
-    //   console.log('request error:', error);
-    //   AdMobInterstitial.showAd((error) => { console.log('Parked: interstitial error:', error) });
-    // });
-
   }
 
   setMarker() {
