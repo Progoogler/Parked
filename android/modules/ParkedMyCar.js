@@ -102,6 +102,16 @@ export default class ParkedMyCar extends Component {
   }
 
   componentWillMount() {
+    BackAndroid.addEventListener('hardwareBackPress', () => {
+      if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
+          this.props.navigator.pop();
+          return true;
+      }
+      return false
+    });
+  }
+
+  componentDidMount() {
     if (!this.props.latitude || isNaN(this.props.latitude)) {
       navigator.geolocation.getCurrentPosition(
         position => {
@@ -118,16 +128,6 @@ export default class ParkedMyCar extends Component {
       AsyncStorage.setItem('@Parked:latitude', this.props.latitude + '');
       AsyncStorage.setItem('@Parked:longitude', this.props.longitude + '');
     }
-  }
-
-  componentDidMount() {
-    BackAndroid.addEventListener('hardwareBackPress', () => {
-      if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
-          this.props.navigator.pop();
-          return true;
-      }
-      return false
-    });
     //AdMobInterstitial.setAdUnitID('ca-app-pub-6795803926768626/6153789791');
     // AdMobInterstitial.setTestDeviceID('353513070582866');
     // AdMobInterstitial.addEventListener('interstitialDidLoad', () => {
@@ -175,41 +175,13 @@ export default class ParkedMyCar extends Component {
   }
 
   setMarker() {
-    if (!this.props.latitude || isNaN(this.props.latitude)) {
-        this.setState({
-          marker: {insert:
-          <MapView.Marker draggable
-            coordinate={
-              {
-                latitude: this.state.latitude,
-                longitude: this.state.longitude
-              }
-            }
-            onDragEnd={(e) => {
-              this.setState({
-                latitude: e.nativeEvent.coordinate.latitude,
-                longitude: e.nativeEvent.coordinate.longitude
-              });
-            }}>
-
-            <MapView.Callout tooltip={true}>
-              <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
-            </MapView.Callout>
-          </MapView.Marker>
-        }
-      });
-      this.animatedMap._component.animateToCoordinate({
-          latitude: this.state.latitude,
-          longitude: this.state.longitude
-      }, 1500);
-    } else {
-      this.setState({
-        marker: {insert:
+    this.setState({
+      marker: {insert:
         <MapView.Marker draggable
           coordinate={
             {
-              latitude: this.props.latitude,
-              longitude: this.props.longitude
+              latitude: this.state.latitude,
+              longitude: this.state.longitude
             }
           }
           onDragEnd={(e) => {
@@ -217,19 +189,20 @@ export default class ParkedMyCar extends Component {
               latitude: e.nativeEvent.coordinate.latitude,
               longitude: e.nativeEvent.coordinate.longitude
             });
-          }}
-          title={ 'You are parked here' }>
+          }}>
+
           <MapView.Callout tooltip={true}>
-            <View style={styles.customTooltip}><Text style={{color: 'white'}}>You are parked here</Text></View>
+            <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
           </MapView.Callout>
         </MapView.Marker>
       }
     });
-    this.animatedMap._component.animateToCoordinate({
-        latitude: this.props.latitude,
-        longitude: this.props.longitude
+    setTimeout(() => {
+      this.animatedMap._component.animateToCoordinate({
+        latitude: this.state.latitude,
+        longitude: this.state.longitude
       }, 1500);
-    }
+    }, 1000);
     this.setState({animating: false});
   }
 }
