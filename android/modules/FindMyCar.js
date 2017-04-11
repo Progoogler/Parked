@@ -95,9 +95,10 @@ export default class FindMyCar extends Component {
           longitude: this.props.longitude
         });
       }
-    } catch(error) {
-      console.log('async getCoords() exception', error);
+    } catch (error) {
+      console.log('getCoords() exception:', error);
     }
+
     navigator.geolocation.getCurrentPosition(
       position => {
         this.userLatitude = parseFloat(position.coords.latitude);
@@ -108,11 +109,8 @@ export default class FindMyCar extends Component {
     );
   }
 
-  componentWillMount() {
-    this.getCoords();
-  }
-
   componentDidMount() {
+    this.getCoords();
     BackAndroid.addEventListener('hardwareBackPress', () => {
       if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
           this.props.navigator.pop();
@@ -120,7 +118,7 @@ export default class FindMyCar extends Component {
       }
       return false
     });
-  };
+  }
 
   componentWillUnmount() {
     styles.directionsContainer = {zIndex: -10};
@@ -134,47 +132,28 @@ export default class FindMyCar extends Component {
   }
 
   setMarker() {
-    if (isNaN(this.props.latitude) || !this.props.latitude) {
-      this.setState({
-        marker: {insert:
-          <MapView.Marker
-            coordinate={
-              {
-                latitude: this.state.latitude,
-                longitude: this.state.longitude
-              }
-            }>
-            <MapView.Callout tooltip={true}>
-              <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
-            </MapView.Callout>
-          </MapView.Marker>
-        }
-      });
+    this.setState({
+      marker: {insert:
+        <MapView.Marker
+        coordinate={
+          {
+            latitude: this.state.latitude,
+            longitude: this.state.longitude
+          }
+        }>
+        <MapView.Callout tooltip={true}>
+        <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
+        </MapView.Callout>
+        </MapView.Marker>
+      }
+    });
+    console.log('ANIMATE TO COORDS', this.state.latitude)
+    setTimeout(() => {
       this.animatedMap._component.animateToCoordinate({
         latitude: this.state.latitude,
         longitude: this.state.longitude
       }, 1500);
-    } else {
-      this.setState({
-        marker: {insert:
-          <MapView.Marker
-            coordinate={
-              {
-                latitude: this.props.latitude,
-                longitude: this.props.longitude
-              }
-            }>
-            <MapView.Callout tooltip={true}>
-              <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
-            </MapView.Callout>
-          </MapView.Marker>
-        }
-      });
-      this.animatedMap._component.animateToCoordinate({
-        latitude: this.props.latitude,
-        longitude: this.props.longitude
-      }, 1500);
-    }
+    }, 1000);
     this.setState({animating: false});
   }
 
