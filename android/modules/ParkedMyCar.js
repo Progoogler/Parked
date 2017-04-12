@@ -121,7 +121,8 @@ export default class ParkedMyCar extends Component {
           this.setMarker();
           AsyncStorage.setItem('@Parked:latitude', this.state.latitude + '');
           AsyncStorage.setItem('@Parked:longitude', this.state.longitude + '');
-        }, error => console.log(error)
+        }, error => console.log(error),
+        {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000}
       );
     } else {
       setTimeout(this.setMarker.bind(this), 2000);
@@ -195,14 +196,12 @@ export default class ParkedMyCar extends Component {
             <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
           </MapView.Callout>
         </MapView.Marker>
-      }
+    }
     });
-    setTimeout(() => {
-      this.animatedMap._component.animateToCoordinate({
+    this.animatedMap._component.animateToCoordinate({
         latitude: this.state.latitude,
         longitude: this.state.longitude
-      }, 1500);
-    }, 1000);
+    }, 1500);
     this.setState({animating: false});
   }
 }

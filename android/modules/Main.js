@@ -81,7 +81,8 @@ export default class Main extends Component {
             let latitude = parseFloat(position.coords.latitude);
             let longitude = parseFloat(position.coords.longitude);
             this.setState({ latitude, longitude });
-          }, error => console.log(error)
+          }, error => console.log(error),
+          {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000}
         )
       }.bind(this)
     ).catch((error) => {

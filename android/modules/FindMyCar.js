@@ -105,7 +105,8 @@ export default class FindMyCar extends Component {
         this.userLongitude = parseFloat(position.coords.longitude);
         this.setMarker();
         this.getDirections();
-      }, error => console.log(error)
+      }, error => console.log(error),
+      {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000}
     );
   }
 
@@ -147,7 +148,6 @@ export default class FindMyCar extends Component {
         </MapView.Marker>
       }
     });
-    console.log('ANIMATE TO COORDS', this.state.latitude)
     setTimeout(() => {
       this.animatedMap._component.animateToCoordinate({
         latitude: this.state.latitude,
@@ -158,10 +158,10 @@ export default class FindMyCar extends Component {
   }
 
   getDirections() {
-    const apiKey = this.keyGen.getKey();
+    //const apiKey = this.keyGen.getKey();
     let url = ('https://maps.googleapis.com/maps/api/directions/json?origin=' +
      this.userLatitude + ',' + this.userLongitude + '&destination=' +
-      this.state.latitude + ',' + this.state.longitude + '&mode=walking&key=' + apiKey);
+      this.state.latitude + ',' + this.state.longitude + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68');
     let directions = [];
     let key = 0;
     fetch(url)
