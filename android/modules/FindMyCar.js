@@ -3,6 +3,7 @@ import {
   StyleSheet,
   Text,
   View,
+  ScrollView,
   BackAndroid,
   TouchableHighlight,
   ActivityIndicator,
@@ -41,10 +42,15 @@ export default class FindMyCar extends Component {
             size='large'/>
         </View>
 
-        <View
-        style={styles.directionsContainer}
-        onTouchMove={ this.handleContainerResize.bind(this) }>
+        <ScrollView
+        style={styles.directionsContainer}>
           { this.directions }
+        </ScrollView>
+
+        <View
+        style={styles.resizeHandler}
+        onTouchMove={ this.handleContainerResize.bind(this) }>
+          <View style={styles.triangle}/>
         </View>
 
         <MapView.Animated
@@ -161,7 +167,7 @@ export default class FindMyCar extends Component {
     //const apiKey = this.keyGen.getKey();
     let url = ('https://maps.googleapis.com/maps/api/directions/json?origin=' +
      this.userLatitude + ',' + this.userLongitude + '&destination=' +
-      this.state.latitude + ',' + this.state.longitude + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68');
+      37.78825 + ',' + -122.4324 + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68');
     let directions = [];
     let key = 0;
     fetch(url)
@@ -211,7 +217,7 @@ export default class FindMyCar extends Component {
   }
 
   postDirections(directions = []) {
-    this.setState({animating: true});
+
     if (directions.length === 0) {
       this.directions = [<View style={styles.errorTextContainer}><Text style={styles.error}> Directions could not be loaded. Please follow map. </Text></View>];
     } else {
@@ -229,31 +235,24 @@ export default class FindMyCar extends Component {
         height: this.directionContainerHeight,
         zIndex: 10,
         backgroundColor: '#48BBEC'
-      }
+      };
+      styles.resizeHandler = {
+          position: 'absolute',
+          top: this.initialHeight,
+          right: 0,
+          left: 0,
+          height: 15,
+          backgroundColor: 'white',
+          zIndex: 11
+      };
       this.setState({animating: false});
     };
 
   handleNavigation() {
+    if (this.posted === true) return;
+    this.setState({animating: true});
     this.postDirections(this.directionList);
-    const keepPace = setInterval(() => {
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          let latitude = parseFloat(position.coords.latitude);
-          let longitude = parseFloat(position.coords.longitude);
-          if (this.state.latitude -  latitude < .0009 ||
-           this.state.longitude - longitude < .0009) {
-            clearInterval(keepPace);
-          }
-          this.setState({
-            latitude,
-            longitude
-          });
-        },
-        error => {
-          /* error */
-        }
-      );
-    }, 4000);
+    this.posted = true;
   }
 
   handleContainerResize(evt) {
@@ -268,6 +267,15 @@ export default class FindMyCar extends Component {
         zIndex: 15,
         backgroundColor: '#48BBEC'
       };
+      styles.resizeHandler = {
+          height: 15,
+          top: evt.nativeEvent.pageY,
+          right: 0,
+          left: 0,
+          position: 'absolute',
+          backgroundColor: 'white',
+          zIndex: 11
+      };
       this.directionContainerHeight = evt.nativeEvent.pageY;
     } else {
       styles.directionsContainer = {
@@ -278,7 +286,16 @@ export default class FindMyCar extends Component {
           height: this.initialHeight,
           zIndex: 10,
           backgroundColor: '#48BBEC'
-        }
+        };
+        styles.resizeHandler = {
+            height: 15,
+            top: this.initialHeight,
+            right: 0,
+            left: 0,
+            position: 'absolute',
+            backgroundColor: 'white',
+            zIndex: 11
+        };
       this.directionContainerHeight = this.initialHeight;
       }
       this.forceUpdate();
@@ -297,14 +314,34 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   directionTextContainer: {
-    borderWidth: 2,
-    paddingTop: 6,
-    paddingBottom: 6
+    borderWidth: 1,
+    paddingTop: 10,
+    paddingBottom: 10
   },
   directionText: {
     color: 'white',
     paddingLeft: 25,
     fontSize: 28
+  },
+  resizeHandler: {
+    zIndex: -10
+  },
+  triangle: {
+    marginTop: 3,
+    alignSelf: 'center',
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderBottomWidth: 10,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'red',
+    transform: [
+      {rotate: '180deg'}
+    ]
   },
   error: {
     color: 'red',
