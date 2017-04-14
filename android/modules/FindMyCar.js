@@ -3,6 +3,7 @@ import {
   StyleSheet,
   Text,
   View,
+  ScrollView,
   BackAndroid,
   TouchableHighlight,
   ActivityIndicator,
@@ -28,6 +29,7 @@ export default class FindMyCar extends Component {
     this.initialHeight = 80;
     this.userLatitude = undefined;
     this.userLongitude = undefined;
+    this.posted = false;
     this.keyGen = new keyStore();
   }
 
@@ -42,10 +44,15 @@ export default class FindMyCar extends Component {
         </View>
 
         <View
-        style={styles.directionsContainer}
-        onTouchMove={ this.handleContainerResize.bind(this) }>
+        style={styles.directionsContainer}>
+          <ScrollView>
           { this.directions }
+          </ScrollView>
         </View>
+
+        <View
+        style={styles.resizeHandler}
+        onTouchMove={ this.handleContainerResize.bind(this) }/>
 
         <MapView.Animated
           ref={ref => { this.animatedMap = ref; }}
@@ -105,8 +112,7 @@ export default class FindMyCar extends Component {
         this.userLongitude = parseFloat(position.coords.longitude);
         this.setMarker();
         this.getDirections();
-      }, error => console.log(error),
-      {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000}
+      }, error => console.log(error)
     );
   }
 
@@ -149,6 +155,9 @@ export default class FindMyCar extends Component {
       }
     });
     setTimeout(() => {
+      while (this.animatedMap === undefined) {
+        // wait
+      }
       this.animatedMap._component.animateToCoordinate({
         latitude: this.state.latitude,
         longitude: this.state.longitude
@@ -161,7 +170,7 @@ export default class FindMyCar extends Component {
     //const apiKey = this.keyGen.getKey();
     let url = ('https://maps.googleapis.com/maps/api/directions/json?origin=' +
      this.userLatitude + ',' + this.userLongitude + '&destination=' +
-      this.state.latitude + ',' + this.state.longitude + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68');
+      37.78825 + ',' + -122.4324 + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68');
     let directions = [];
     let key = 0;
     fetch(url)
@@ -230,34 +239,25 @@ export default class FindMyCar extends Component {
         zIndex: 10,
         backgroundColor: '#48BBEC'
       }
+      styles.resizeHandler = {
+          height: 15,
+          top: this.initialHeight,
+          right: 0,
+          left: 0,
+          position: 'absolute',
+          backgroundColor: 'white',
+          zIndex: 11
+      }
       this.setState({animating: false});
     };
 
   handleNavigation() {
+    if (this.posted === true) return;
     this.postDirections(this.directionList);
-    const keepPace = setInterval(() => {
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          let latitude = parseFloat(position.coords.latitude);
-          let longitude = parseFloat(position.coords.longitude);
-          if (this.state.latitude -  latitude < .0009 ||
-           this.state.longitude - longitude < .0009) {
-            clearInterval(keepPace);
-          }
-          this.setState({
-            latitude,
-            longitude
-          });
-        },
-        error => {
-          /* error */
-        }
-      );
-    }, 4000);
+    this.posted = true;
   }
 
   handleContainerResize(evt) {
-
     if (this.directionContainerHeight >= this.initialHeight) {
       styles.directionsContainer = {
         position: 'absolute',
@@ -268,6 +268,15 @@ export default class FindMyCar extends Component {
         zIndex: 15,
         backgroundColor: '#48BBEC'
       };
+      styles.resizeHandler = {
+          height: 15,
+          top: evt.nativeEvent.pageY,
+          right: 0,
+          left: 0,
+          position: 'absolute',
+          backgroundColor: 'white',
+          zIndex: 11
+      }
       this.directionContainerHeight = evt.nativeEvent.pageY;
     } else {
       styles.directionsContainer = {
@@ -278,6 +287,15 @@ export default class FindMyCar extends Component {
           height: this.initialHeight,
           zIndex: 10,
           backgroundColor: '#48BBEC'
+        }
+        styles.resizeHandler = {
+            height: 15,
+            top: this.initialHeight,
+            right: 0,
+            left: 0,
+            position: 'absolute',
+            backgroundColor: 'white',
+            zIndex: 11
         }
       this.directionContainerHeight = this.initialHeight;
       }
