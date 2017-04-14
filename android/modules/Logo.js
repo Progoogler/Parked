@@ -25,7 +25,7 @@ export default class Logo extends Component {
       } else {
         return;
       }
-    }, 1400);
+    }, 1200);
 
     return (
       <View style={styles.container}>
@@ -38,9 +38,6 @@ export default class Logo extends Component {
       </View>
     );
   }
-
-
-
 
 
   componentDidMount() {
