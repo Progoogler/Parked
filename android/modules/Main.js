@@ -111,7 +111,9 @@ export default class Main extends Component {
       page: 'FindMyCar',
       passProps: {
         latitude: this.latitude,
-        longitude: this.longitude
+        longitude: this.longitude,
+        userLatitude: this.state.latitude,
+        userLongitude: this.state.longitude
       }
     });
   }
