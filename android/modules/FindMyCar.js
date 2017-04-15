@@ -21,7 +21,8 @@ export default class FindMyCar extends Component {
       latitude: undefined,
       longitude: undefined,
       marker: { insert: <View></View> },
-      animating: true
+      animating: true,
+      errorMessage: null
     };
     this.directions = [];
     this.directionList = [];
@@ -53,6 +54,10 @@ export default class FindMyCar extends Component {
           <View style={styles.triangle}/>
         </View>
 
+        <View style={styles.errorMessageContainer}>
+          {this.state.errorMessage}
+        </View>
+
         <MapView.Animated
           ref={ref => { this.animatedMap = ref; }}
           style={styles.map}
@@ -60,8 +65,8 @@ export default class FindMyCar extends Component {
           showsUserLocation={true}
 
           initialRegion={{
-            latitude: 37.78825,
-            longitude: -122.4324,
+            latitude: 37.78926,
+            longitude: -122.43159,
             latitudeDelta: 0.0048,
             longitudeDelta: 0.0020
           }}>
@@ -111,7 +116,9 @@ export default class FindMyCar extends Component {
         this.userLongitude = parseFloat(position.coords.longitude);
         this.setMarker();
         this.getDirections();
-      }, error => console.log(error),
+      }, error => {
+        this.retryGeolocation();
+      },
       {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000}
     );
   }
@@ -129,6 +136,7 @@ export default class FindMyCar extends Component {
 
   componentWillUnmount() {
     styles.directionsContainer = {zIndex: -10};
+    styles.resizeHandler = {zIndex: -10};
     BackAndroid.removeEventListener('hardwareBackPress', () => {
       if (this.props.navigator && this.props.navigator.getCurrentRoutes().length > 1) {
           this.props.navigator.pop();
@@ -136,6 +144,40 @@ export default class FindMyCar extends Component {
       }
       return false;
     });
+  }
+
+  retryGeolocation() {
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        this.userLatitude = parseFloat(position.coords.latitude);
+        this.userLongitude = parseFloat(position.coords.longitude);
+        this.setMarker();
+        this.getDirections();
+      }, error => {
+        if (this.props.userLatitude) {
+          setTimeout(() => {
+            this.animatedMap._component.animateToCoordinate({
+              latitude: this.props.userLatitude,
+              longitude: this.props.userLongitude
+            }, 1500)
+          }, 1500);
+        }
+        styles.errorMessageContainer = {
+          zIndex: 10,
+          paddingLeft: 15,
+          paddingRight: 15,
+          paddingTop: 10,
+          paddingBottom: 10,
+          backgroundColor: 'grey'
+        };
+        if (this.state.latitude) {
+          this.setState({errorMessage: <Text style={styles.errorMessage}> Oops, something went wrong. {"\n"} Did you maybe park at {"\n"} latitude: {this.state.latitude} {"\n"} longitude: {this.state.longitude}</Text>});
+        } else {
+          this.setState({errorMessage: <Text style={styles.errorMessage}> Oops, something went wrong. {"\n"} Make sure your location is enabled. </Text>});
+        }
+        this.setState({animating: false});
+      }
+    );
   }
 
   setMarker() {
@@ -148,19 +190,21 @@ export default class FindMyCar extends Component {
             longitude: this.state.longitude
           }
         }>
-        <MapView.Callout tooltip={true}>
-        <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
-        </MapView.Callout>
+          <MapView.Callout tooltip={true}>
+            <View style={styles.customTooltip}><Text style={{color: 'white', fontWeight: 'bold'}}>You are parked here</Text></View>
+          </MapView.Callout>
         </MapView.Marker>
       }
     });
-    setTimeout(() => {
-      this.animatedMap._component.animateToCoordinate({
-        latitude: this.state.latitude,
-        longitude: this.state.longitude
-      }, 1500);
-    }, 1000);
+    setTimeout(this.animateToCoord.bind(this), 1500);
     this.setState({animating: false});
+  }
+
+  animateToCoord() {
+    this.animatedMap._component.animateToCoordinate({
+      latitude: this.state.latitude,
+      longitude: this.state.longitude
+    }, 1000);
   }
 
   getDirections() {
@@ -212,7 +256,7 @@ export default class FindMyCar extends Component {
       this.directionList = directions;
     })
     .catch((err) => {
-      console.log(err);
+      // handle error in postDirections()
     });
   }
 
@@ -323,6 +367,14 @@ const styles = StyleSheet.create({
     paddingLeft: 25,
     fontSize: 28
   },
+  errorMessageContainer: {
+    zIndex: -10
+  },
+  errorMessage: {
+    color: 'red',
+    textAlign: 'center',
+    fontSize: 30
+  },
   resizeHandler: {
     zIndex: -10
   },
@@ -363,7 +415,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   activity: {
-    marginBottom: 200
+    marginTop: 300
   },
   button: {
     marginBottom: 95,
