@@ -10,46 +10,22 @@ import {
   AsyncStorage
 } from 'react-native';
 import MapView from 'react-native-maps';
-import {
-  AdMobBanner,
-  AdMobInterstitial
-} from 'react-native-admob';
+import { AdMobBanner } from 'react-native-admob';
 
 export default class ParkedMyCar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      latitude: this.props.latitude || 37.78825,
-      longitude: this.props.longitude || -122.4324,
+      latitude: this.props.latitude || 37.78942,
+      longitude: this.props.longitude || -122.43159,
       checkmark: {opacity: 0},
       marker: { insert: <View></View> },
-      animating: true
+      animating: true,
+      errorMessage: null
     }
   }
 
   render() {
-
-    // invalid props.style key featureType supplied to AIRMap
-/*    let mapStyle = [
-      {
-        "featureType": "road.local",
-        "elementType": "geometry.stroke",
-        "stylers": [
-          {
-            "color": "#2414f0"
-          }
-        ]
-      },
-      {
-        "featureType": "road.local",
-        "elementType": "labels.icon",
-        "stylers": [
-          {
-            "weight": 7.5
-          }
-        ]
-      }
-    ]*/
 
     return (
       <View style={styles.container}>
@@ -67,9 +43,12 @@ export default class ParkedMyCar extends Component {
             size='large'/>
         </View>
 
+        <View style={styles.errorMessageContainer}>
+          {this.state.errorMessage}
+        </View>
+
         <MapView.Animated
           style={styles.map}
-          //customMapStyle={mapStyle}
           ref={ref => { this.animatedMap = ref; }}
           mapType="hybrid"
 
@@ -121,7 +100,9 @@ export default class ParkedMyCar extends Component {
           this.setMarker();
           AsyncStorage.setItem('@Parked:latitude', this.state.latitude + '');
           AsyncStorage.setItem('@Parked:longitude', this.state.longitude + '');
-        }, error => console.log(error),
+        }, error => {
+          this.retryGeolocation();
+        },
         {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000}
       );
     } else {
@@ -129,14 +110,6 @@ export default class ParkedMyCar extends Component {
       AsyncStorage.setItem('@Parked:latitude', this.props.latitude + '');
       AsyncStorage.setItem('@Parked:longitude', this.props.longitude + '');
     }
-    //AdMobInterstitial.setAdUnitID('ca-app-pub-6795803926768626/6153789791');
-    // AdMobInterstitial.setTestDeviceID('353513070582866');
-    // AdMobInterstitial.addEventListener('interstitialDidLoad', () => {
-    //     console.log('ad loaded');
-    // });
-    // AdMobInterstitial.addEventListener('interstitialDidFailToLoad', () => {
-    //   console.log('ad failed to load');
-    // });
   };
 
   componentWillUnmount() {
@@ -149,7 +122,32 @@ export default class ParkedMyCar extends Component {
     });
   }
 
+  retryGeolocation() {
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        let latitude = parseFloat(position.coords.latitude);
+        let longitude = parseFloat(position.coords.longitude);
+        this.setState({ latitude, longitude });
+        this.setMarker();
+        AsyncStorage.setItem('@Parked:latitude', this.state.latitude + '');
+        AsyncStorage.setItem('@Parked:longitude', this.state.longitude + '');
+      }, error => {
+        styles.errorMessageContainer = {
+          zIndex: 10,
+          paddingLeft: 15,
+          paddingRight: 15,
+          paddingTop: 10,
+          paddingBottom: 10,
+          backgroundColor: 'grey'
+        };
+        this.setState({animating: false});
+        this.setState({errorMessage: <Text style={styles.errorMessage}>Could not access your current geolocation. {"\n"} Please try again.</Text>});
+      }
+    );
+  }
+
   checkStyle() {
+    if (this.state.animating === true || this.state.errorMessage !== null) return;
     this.setState({checkmark:
       {
         marginBottom: 195,
@@ -198,11 +196,15 @@ export default class ParkedMyCar extends Component {
         </MapView.Marker>
     }
     });
-    this.animatedMap._component.animateToCoordinate({
-        latitude: this.state.latitude,
-        longitude: this.state.longitude
-    }, 1500);
+    setTimeout(this.animateToCoord.bind(this), 1500);
     this.setState({animating: false});
+  }
+
+  animateToCoord() {
+    this.animatedMap._component.animateToCoordinate({
+      latitude: this.state.latitude,
+      longitude: this.state.longitude
+    }, 1000);
   }
 }
 
@@ -232,6 +234,14 @@ const styles = StyleSheet.create({
   },
   activity: {
     marginBottom: 100
+  },
+  errorMessageContainer: {
+    zIndex: -10
+  },
+  errorMessage: {
+    color: 'red',
+    textAlign: 'center',
+    fontSize: 30
   },
   button: {
     marginBottom: 90,
