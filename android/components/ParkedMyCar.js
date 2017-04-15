@@ -196,15 +196,15 @@ export default class ParkedMyCar extends Component {
         </MapView.Marker>
     }
     });
-    setTimeout(this.animateToCoord.bind(this), 1500);
-    this.setState({animating: false});
+    setTimeout(this.animateToCoord.bind(this), 1000);
   }
 
   animateToCoord() {
     this.animatedMap._component.animateToCoordinate({
       latitude: this.state.latitude,
       longitude: this.state.longitude
-    }, 1000);
+    }, 1500);
+    this.setState({animating: false});
   }
 }
 

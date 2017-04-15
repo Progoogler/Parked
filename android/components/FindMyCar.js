@@ -196,22 +196,22 @@ export default class FindMyCar extends Component {
         </MapView.Marker>
       }
     });
-    setTimeout(this.animateToCoord.bind(this), 1500);
-    this.setState({animating: false});
+    setTimeout(this.animateToCoord.bind(this), 1000);
   }
 
   animateToCoord() {
     this.animatedMap._component.animateToCoordinate({
       latitude: this.state.latitude,
       longitude: this.state.longitude
-    }, 1000);
+    }, 1500);
+    this.setState({animating: false});
   }
 
   getDirections() {
-    //const apiKey = this.keyGen.getKey();
+    const apiKey = this.keyGen.getKey();
     let url = ('https://maps.googleapis.com/maps/api/directions/json?origin=' +
      this.userLatitude + ',' + this.userLongitude + '&destination=' +
-      37.78825 + ',' + -122.4324 + '&mode=walking&key=AIzaSyALRq2Ep7Rfw61lvdZLMzhYP41YPglqA68');
+      37.78825 + ',' + -122.4324 + '&mode=walking&key=' + apiKey);
     let directions = [];
     let key = 0;
     fetch(url)
