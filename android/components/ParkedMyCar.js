@@ -150,7 +150,7 @@ export default class ParkedMyCar extends Component {
     if (this.state.animating === true || this.state.errorMessage !== null) return;
     this.setState({checkmark:
       {
-        marginBottom: 195,
+        marginBottom: 175,
         height: 120,
         width: 120,
         borderWidth: 3,
