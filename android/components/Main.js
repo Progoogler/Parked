@@ -1,9 +1,3 @@
-
-
-// todo: extra memory please!
-// activity indicator or no?
-
-
 import React, { Component } from 'react';
 import {
   StyleSheet,
@@ -119,12 +113,11 @@ export default class Main extends Component {
   }
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#615A53'
+    backgroundColor: '#272626'
   },
   title: {
     fontSize: 66,
@@ -152,7 +145,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     justifyContent: 'center',
-    backgroundColor: '#FF911C'
+    backgroundColor: '#E57E04'
   },
   label: {
     fontSize: 36,
