@@ -11,7 +11,7 @@ import {
 
 } from 'react-native';
 import MapView from 'react-native-maps';
-import keyStore from '../../resources/key/mapApiKey.js';
+import keyStore from '../../resources/key/mapApiKey';
 import { AdMobBanner } from 'react-native-admob';
 
 export default class FindMyCar extends Component {
@@ -155,12 +155,7 @@ export default class FindMyCar extends Component {
         this.getDirections();
       }, error => {
         if (this.props.userLatitude) {
-          setTimeout(() => {
-            this.animatedMap._component.animateToCoordinate({
-              latitude: this.props.userLatitude,
-              longitude: this.props.userLongitude
-            }, 1500)
-          }, 1500);
+          this.animateToCoord(this.props.userLatitude, this.props.userLongitude).bind(this);
         }
         styles.errorMessageContainer = {
           zIndex: 10,
@@ -196,13 +191,13 @@ export default class FindMyCar extends Component {
         </MapView.Marker>
       }
     });
-    setTimeout(this.animateToCoord.bind(this), 1000);
+    setTimeout(this.animateToCoord(this.state.latitude, this.state.longitude).bind(this), 1000);
   }
 
-  animateToCoord() {
+  animateToCoord(lat, long) {
     this.animatedMap._component.animateToCoordinate({
-      latitude: this.state.latitude,
-      longitude: this.state.longitude
+      latitude: lat,
+      longitude: long
     }, 1500);
     this.setState({animating: false});
   }
