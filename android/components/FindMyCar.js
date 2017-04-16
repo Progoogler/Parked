@@ -191,6 +191,7 @@ export default class FindMyCar extends Component {
         </MapView.Marker>
       }
     });
+    // In case MapView.Animiated ref hasn't loaded yet..
     setTimeout(this.animateToCoord(this.state.latitude, this.state.longitude).bind(this), 1000);
   }
 
